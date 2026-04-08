@@ -27,11 +27,19 @@ st.title("📦 門市庫存管理系統")
 df = load_data()
 
 # --- 區塊 1：目前庫存 ---
-st.header("📍 目前庫存")
+st.header("📍 目前庫存 (✨可直接點擊表格修改並自動存檔)")
 if df.empty:
     st.info("目前倉庫空空如也，請從下方新增商品！")
 else:
-    st.dataframe(df, use_container_width=True)
+    # 【新增自動存檔功能】
+    # 使用 st.data_editor 取代原本的 st.dataframe，讓表格具備互動性
+    edited_df = st.data_editor(df, use_container_width=True, key="inventory_editor")
+    
+    # 檢查：如果編輯後的資料跟原始載入的資料不一樣，就自動存檔！
+    if not edited_df.equals(df):
+        save_data(edited_df)
+        df = edited_df # 同步更新程式碼裡的 df 變數，確保下方的下拉選單吃到最新資料
+        st.toast("💾 變更已自動儲存！", icon="✅") # 畫面右下角跳出輕量提示
 
 st.divider()
 
@@ -99,7 +107,7 @@ if st.button("➕ 確認新增這項商品"):
 
 st.divider()
 
-# --- 區塊 4：刪除商品 (新加入的功能！) ---
+# --- 區塊 4：刪除商品 ---
 st.header("🗑️ 刪除商品")
 if not df.empty:
     item_to_delete = st.selectbox("選擇要下架/刪除的商品", df["品名"].tolist(), key="delete_select")
